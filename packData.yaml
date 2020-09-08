@@ -1,0 +1,11 @@
+packedNum: 2
+maxPackNum: 2
+weekNum: '2'
+boxNumber: asd
+model: '2'
+codes:
+  code0: '122'
+  code1: '1221'
+codesState:
+  code0: true
+  code1: true

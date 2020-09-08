@@ -1,0 +1,10 @@
+mysql:
+  ip: 127.0.0.1
+  user: root
+  password: code02709829!
+  database: TEtest
+  table: packedData
+
+drawParam:
+  circleRadius: 40
+  gapBetweenCircle: 20
