@@ -2,12 +2,14 @@ import pymysql
 from YamlTool import Yaml_Tool
 from codeAndBoxState import CodeState,BoxState,InputDataState
 from PyQt5.QtCore import *
+from time import sleep
 
 class MysqlTool:
     def __init__(self):
         self.yamlTool=Yaml_Tool()
         self.params=self.yamlTool.getValue('deviceParam.yaml')['mysql']
         self._connectState=self.connectServer()
+        self._deviceSerial=self.yamlTool.getValue('deviceParam.yaml')['deviceParam']['deviceSerial']
         pass
 
     def connectServer(self):
@@ -22,12 +24,14 @@ class MysqlTool:
             return False
 
     def executeSql(self,sql):
+        if not self._connectState:
+            return False
         try:
             self.cursor.execute(sql)
             self.db.commit()
             return True
         except:
-            self.db.rollback()
+            # self.db.rollback()
             return False
         pass
 
@@ -103,7 +107,7 @@ class MysqlTool:
               date + "\',\'" + time + "\',\'" + data['boxNumber'] + "\',\'"\
               +str(data['weekNum']) + "\'," + str(data['packedNum']) + "," +\
               str(data['maxPackNum']) \
-                + ",\'" + codeState + "\',\'" + data['serialNumber'] + "\');"
+                + ",\'" + codeState + "\',\'" + self._deviceSerial + "\');"
         #print(sql)
 
         if not data['isCommonPackMode'] and data['codeState']==CodeState.PACKED_POINT:
@@ -114,10 +118,24 @@ class MysqlTool:
             self.executeSql(_sql)
             # print(_sql)
         else:
-            # print(data['codeState'])
             pass
 
-        if not self.executeSql(sql):
+        if self.executeSql(sql):
+            sleep(0.1) 
+            #############check the data is success save to server############
+            _checkSql='select 1 from packedData where model=\''+data['model']+'\' and \
+                        code=\''+data['code']+'\' and \
+                        boxNumber=\''+data['boxNumber']+'\' and \
+                        serialNumber=\''+self._deviceSerial+'\' and \
+                        time1=\''+date+'\' and time2=\''+time+'\';'
+            # print(_checkSql)
+            if not self.executeSql(_checkSql):
+                return False
+            # print("check result:"+str(self.cursor.rowcount))
+            if self.cursor.rowcount == 0:
+                return False
+            return True
+        else:
             return False
         return True
         pass
@@ -166,13 +184,10 @@ class MysqlTool:
         self.executeSql(sql)
         result=str(self.cursor.fetchone()[0])
         date=result.split(' ')[0]
-        # print(date)
-        # print(result)
-        # print('getServerTime sql' + sql)
         pass
 
     def getDayPackedData(self, data):
-        self.getServerTime()
+        # self.getServerTime()
         data['dayPackedAdapterNum'] = 0
         data['dayPackedBoxNum'] = 0
         data['dayErrorCodeNum'] = 0
@@ -180,14 +195,16 @@ class MysqlTool:
         data['dayDuplicateCodeNum'] = 0
 
         timeSql="select DATE_FORMAT(NOW(),'%Y-%m-%d');"
-        self.executeSql(timeSql)
-        date = str(self.cursor.fetchone()[0])
+        if self.executeSql(timeSql):
+            date = str(self.cursor.fetchone()[0])
+        else:
+            return data
         # print('date:'+date)
         # date=QDateTime.currentDateTime().toString('yyyy-MM-dd')
 
         getDayPackedBoxNumSql="select count(distinct boxNumber) from packedData where time1=\'" \
                            + date + "\' and packFlag='PACKED_CODE' and packedNum=maxPackNum and serialNumber=\'" \
-                           + data['serialNumber'] + "\';"
+                           + self._deviceSerial + "\';"
         # print('getPackedBoxNumSql sql:' + getDayPackedBoxNumSql)
         if self.executeSql(getDayPackedBoxNumSql):
             result=self.cursor.fetchone()
@@ -196,7 +213,7 @@ class MysqlTool:
 
         getDayPackedAdapterNumSql="select count(code) from packedData where time1=\'" \
                            + date + "\' and packFlag='PACKED_CODE'  and serialNumber=\'" \
-                           + data['serialNumber'] + "\';"
+                           + self._deviceSerial + "\';"
         # print('getDayPackedAdapterNumSql sql:' + getDayPackedAdapterNumSql)
         if self.executeSql(getDayPackedAdapterNumSql):
             result=self.cursor.fetchone()
@@ -204,30 +221,26 @@ class MysqlTool:
         # print('dayPackedAdapterNum:'+str(_data['dayPackedAdapterNum']))
 
         getDayErrorCodeNumSql="select count(code) from packedData where time1=\'" \
-                           + date + "\' and packFlag='ERROR_LENGTH_CODE' or" \
-                                    " packFlag='ERROR_FIXED_CODE' or" \
-                                    " packFlag='ERROR_WEEKNUM_CODE' and serialNumber=\'" \
-                           + data['serialNumber'] + "\';"
+                           + date + "\' and packFlag in('ERROR_LENGTH_CODE','ERROR_FIXED_CODE','ERROR_WEEKNUM_CODE')\
+                                and serialNumber=\'" +self._deviceSerial + "\';"
         # print('getDayErrorCodeNumSql sql:' + getDayErrorCodeNumSql)
         if self.executeSql(getDayErrorCodeNumSql):
             result=self.cursor.fetchone()
             data['dayErrorCodeNum']=result[0]
         # print('dayErrorCodeNum:'+str(_data['dayErrorCodeNum']))
 
-
         getDayUntestCodeNumSql="select count(code) from packedData where time1=\'" \
                            + date + "\' and packFlag='UNTEST_CODE'  and serialNumber=\'" \
-                           + data['serialNumber'] + "\';"
+                           + self._deviceSerial + "\';"
         # print('getDayUntestCodeNumSql sql:' + getDayUntestCodeNumSql)
         if self.executeSql(getDayUntestCodeNumSql):
             result=self.cursor.fetchone()
             data['dayUntestCodeNum']=result[0]
         # print('dayUntestCodeNum:'+str(_data['dayUntestCodeNum']))
 
-
         getDayDuplicateCodeNumSql="select count(code) from packedData where time1=\'" \
                            + date + "\' and packFlag='DUPLICATE_CODE'  and serialNumber=\'" \
-                           + data['serialNumber'] + "\';"
+                           + self._deviceSerial + "\';"
         # print('getDayDuplicateCodeNumSql sql:' + getDayDuplicateCodeNumSql)
         if self.executeSql(getDayDuplicateCodeNumSql):
             result=self.cursor.fetchone()
@@ -242,5 +255,10 @@ class MysqlTool:
         self.executeSql(_sql)
         pass
 
+    def clearErrorCodeRecord(self):
+        _clearSql="delete from packedData where packFlag !=\'PACKED_CODE\' and serialNumber=\'"+self._deviceSerial+"\';"
+        # print(_clearSql)
+        self.executeSql(_clearSql)
+        pass
 
 

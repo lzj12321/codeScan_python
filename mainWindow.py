@@ -1251,7 +1251,7 @@ class GUI(QWidget):
 
     def checkAndSaveCode(self):
         ####yuanminmin###########################
-        self.data['isCheckUntest'] = True
+        self.data['isCheckUntest'] = False
         self.data['isCheckDuplicate'] = True
 
         checkResult = self.checkTool.checkCodeValidity(self.data)
@@ -1281,10 +1281,10 @@ class GUI(QWidget):
                     return
             if checkResult == CodeState.UNTEST_CODE_POINT:
                 self.codeLabelArray[_codeIndex].setStyleSheet("background:red")
-        # else:
-        #     #######将检测检测赋给显示界面#####################
-        #     self.paintFlagArray[self.validCoordinate[self.data['packedNum']].x][
-        #         self.validCoordinate[self.data['packedNum']].y] = checkResult
+        else:
+            #######将检测检测赋给显示界面#####################
+            self.paintFlagArray[self.validCoordinate[self.data['packedNum']].x][
+                self.validCoordinate[self.data['packedNum']].y] = checkResult
 
         if checkResult == CodeState.PACKED_POINT:
             self.data['dayPackedAdapterNum'] += 1
@@ -1316,14 +1316,15 @@ class GUI(QWidget):
         ###############保存条码错误的时候，报错并回滚################
         _checkResult=checkResult
         if not self.checkTool.savePackedDataToServer(self.data,checkResult):
+            # print("save data error!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
             checkResult=CodeState.SAVE_ERROR_POINT
             self.lineEdit_12.setText('保存错误 '+self.data['code'])
             self.data['dayErrorCodeNum'] += 1
             if _checkResult==CodeState.PACKED_POINT:
                 self.data['dayPackedAdapterNum'] -= 1
                 self.data['packedNum'] -= 1
-
-        self.paintFlagArray[self.validCoordinate[self.data['packedNum']].x][self.validCoordinate[self.data['packedNum']].y] = checkResult
+            self.paintFlagArray[self.validCoordinate[self.data['packedNum']].x][self.validCoordinate[self.data['packedNum']].y]\
+                 = checkResult
         self.repaint()
         self.checkTool.saveDataToLocal(self.data)
 
@@ -1438,7 +1439,7 @@ class GUI(QWidget):
 
     def closeEvent(self, a0: QtGui.QCloseEvent) -> None:
         choose = QMessageBox.question(self, 'Question', '确认关闭程序？', QMessageBox.Yes | QMessageBox.No,
-                                      QMessageBox.Yes)
+                                      QMessageBox.No)
         if choose == QMessageBox.No:
             a0.ignore()
 

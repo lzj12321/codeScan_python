@@ -29,3 +29,6 @@ dayErrorCodeNum: 0
 dayUntestCodeNum: 0
 dayDuplicateCodeNum: 0
 codeRange: '1212'
+
+
+# create table packData(code char(50),layerNumEachBox int,adapterNumEachPoint int,numAdapterEachLine int,pointNumEachLine int,model char(20),boxNumber char(20),weekNum int,weekNumPosition int,lineNumEachLayer int,adapterNumEachLayer int,packedNum int,maxPackNum int,fixCode char(50),codeLength int,boxNumberLength int,isCheckBoxNumberLength int,isCheckCodeLength int,isCheckFixCode int,isCheckUntest int,isCheckDuplicate int,isCheckWeekNum int,isCommonPackMode int,codeRange int);

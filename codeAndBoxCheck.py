@@ -2,12 +2,14 @@ import sys
 from codeAndBoxState import CodeState,BoxState,InputDataState
 from mysqlTool import MysqlTool
 from YamlTool import Yaml_Tool
+from sqliteTool import SqliteTool
 
 class CodeAndBoxCheck:
 
     def __init__(self):
         self.mysqlTool=MysqlTool()
         self.yamlTool=Yaml_Tool()
+        self.sqliteTool=SqliteTool()
         pass
 
     def checkBoxNumber(self, data):
@@ -55,10 +57,13 @@ class CodeAndBoxCheck:
         pass
 
     def saveDataToLocal(self,data):
-        self.yamlTool.saveParam("configure.yaml",data)
+        self.sqliteTool.savePackData(data)
+        # self.yamlTool.saveParam("configure.yaml",data)
 
     def loadPackData(self):
-        data=self.yamlTool.getValue('configure.yaml')
+        # data=self.yamlTool.getValue('configure.yaml')
+        data=self.sqliteTool.getPackData()
+        # print(data)
         return data
         pass
 
@@ -88,8 +93,7 @@ class CodeAndBoxCheck:
         self.mysqlTool.updateCodeBoxNumber(data)
 
     def clearUntestCodeRecord(self):
-        sql="delete from packedData where packFlag !=\'PACKED_CODE\';"
-        self.mysqlTool.executeSql(sql)
+        self.mysqlTool.clearErrorCodeRecord()
 
     def preProcessCode(self, code):
         if code == "":

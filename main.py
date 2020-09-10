@@ -5,6 +5,6 @@ from mainWindow import GUI
 if __name__ == '__main__':
     app=QApplication(sys.argv)
     runGui=GUI()
-    # runGui.showFullScreen()
-    runGui.show()
+    runGui.showFullScreen()
+    # runGui.show()
     sys.exit(app.exec_())
