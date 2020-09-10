@@ -121,20 +121,21 @@ class MysqlTool:
             pass
 
         if self.executeSql(sql):
-            sleep(0.1) 
-            #############check the data is success save to server############
-            _checkSql='select 1 from packedData where model=\''+data['model']+'\' and \
+            _maxCheckTime=3
+            _isCheckSaveResult=True
+            while _maxCheckTime>0 and _isCheckSaveResult:
+                sleep(0.1)
+                #############check the data is success save to server############
+                _checkSql='select 1 from packedData where model=\''+data['model']+'\' and \
                         code=\''+data['code']+'\' and \
                         boxNumber=\''+data['boxNumber']+'\' and \
                         serialNumber=\''+self._deviceSerial+'\' and \
                         time1=\''+date+'\' and time2=\''+time+'\';'
-            # print(_checkSql)
-            if not self.executeSql(_checkSql):
-                return False
-            # print("check result:"+str(self.cursor.rowcount))
-            if self.cursor.rowcount == 0:
-                return False
-            return True
+                if self.executeSql(_checkSql):
+                    print("check result:"+str(self.cursor.rowcount))
+                    if self.cursor.rowcount > 0:
+                        return True
+                _maxCheckTime-=1
         else:
             return False
         return True

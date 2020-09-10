@@ -61,7 +61,7 @@ class SqliteTool:
             numAdapterEachLine='+str(_data['numAdapterEachLine'])+',\
             pointNumEachLine='+str(_data['pointNumEachLine'])+',\
             model=\''+_data['model']+'\',\
-            boxNumber='+str(_data['boxNumber'])+',\
+            boxNumber=\''+str(_data['boxNumber'])+'\',\
             weekNum='+str(_data['weekNum'])+',\
             weekNumPosition='+str(_data['weekNumPosition'])+',\
             lineNumEachLayer='+str(_data['lineNumEachLayer'])+',\
